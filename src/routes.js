@@ -1,5 +1,5 @@
 import express from 'express'
-import {models} from './db'
+import {models} from './queries'
 
 const router = express.Router()
 
