@@ -1,7 +1,7 @@
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 import server from '../server'
-import {init as db} from '../db'
+import {init as db} from '../queries'
 
 chai.use(chaiHttp)
 

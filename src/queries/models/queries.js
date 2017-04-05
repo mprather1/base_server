@@ -1,6 +1,6 @@
 import {init as db} from '../'
 
-function getAllModels (req, res, next) {
+function getAllModels (req, res, next, options) {
   db.any('select * from models')
   .then(function (data) {
     res.status(200)
@@ -11,7 +11,7 @@ function getAllModels (req, res, next) {
   })
 }
 
-function createModel (req, res, next) {
+function createModel (req, res, next, options) {
   db.none('insert into models( name, attribute )' + 'values( ${name}, ${attribute} )', req.body) // eslint-disable-line
   .then(function () {
     res.status(200)
@@ -25,7 +25,7 @@ function createModel (req, res, next) {
   })
 }
 
-function getSingleModel (req, res, next) {
+function getSingleModel (req, res, next, options) {
   const modelID = parseInt(req.params.id)
   db.one('select * from models where id = $1', modelID)
   .then(function (data) {
@@ -37,7 +37,7 @@ function getSingleModel (req, res, next) {
   })
 }
 
-function updateSingleModel (req, res, next) {
+function updateSingleModel (req, res, next, options) {
   const modelID = parseInt(req.params.id)
   db.none('update models set name=$1, attribute=$2 where id=$3', [req.body.name, req.body.attribute, modelID])
   .then(function (done) {
@@ -52,7 +52,7 @@ function updateSingleModel (req, res, next) {
   })
 }
 
-function removeModel (req, res, next) {
+function removeModel (req, res, next, options) {
   var modelID = parseInt(req.params.id)
   db.result('delete from models where id = $1', modelID)
   .then(function (data) {
