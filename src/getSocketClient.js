@@ -26,5 +26,7 @@ export default function getSocketClient (options) {
   
   function handleClose (name) {
     logger.info(`connection to ${chalk.bgBlack.green(name)} closed...`)
-  }  
+  }
+  
+  return emitter
 }

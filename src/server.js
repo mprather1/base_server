@@ -8,6 +8,8 @@ import chalk from 'chalk'
 import winston from 'winston-color'
 import pkg from '../package.json'
 
+var nextId = 0
+
 const options = {
   app: express(),
   port: process.env.PORT || 8000,
@@ -15,10 +17,15 @@ const options = {
   environment: process.env.NODE_ENV || 'development',
   logger: winston,
   hostname: process.env.HOSTNAME,
-  packageName: pkg.name
+  packageName: pkg.name,
+  emitters: {},
+  id: ++nextId
 }
+const emitter = getSocketClient(options)
+const router = getRouter(options)
+const { app, environment, port, logger, packageName, emitters, id} = options
 
-const { app, environment, port, logger, packageName } = options
+emitters[id] = emitter
 
 if (environment === 'development') {
   app.use(morgan('dev'))
@@ -26,9 +33,6 @@ if (environment === 'development') {
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
-
-const socketClient = getSocketClient(options)
-const router = getRouter(options)
 
 app.use('/api', router)
 

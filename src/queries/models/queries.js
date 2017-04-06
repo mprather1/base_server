@@ -12,8 +12,11 @@ function getAllModels (req, res, next, options) {
 }
 
 function createModel (req, res, next, options) {
+  const {emitters, packageName} = options
+  
   db.none('insert into models( name, attribute )' + 'values( ${name}, ${attribute} )', req.body) // eslint-disable-line
   .then(function () {
+  emitters[1].emit('create', packageName)
     res.status(200)
     .json({
       status: 'success',

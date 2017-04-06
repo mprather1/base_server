@@ -1,6 +1,6 @@
 {
   "name": "base_server",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Base server no front end - communicates with other server",
   "main": "build/server.js",
   "repository": "https://github.com/mprather1/base_server",
