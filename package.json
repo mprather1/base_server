@@ -11,7 +11,7 @@
     "dev": "NODE_ENV=development PORT=55460 TZ='America/Chicago' nodemon build/server.js",
     "test": "PORT=8001 TZ='America/Chicago' NODE_ENV=test mocha build/test -t 10000",
     "build": "babel -d build src",
-    "babel:watch": "babel --watch -d build src | ts '[%Y-%m-%d %H:%M:%S]'"
+    "watch": "babel --watch -d build src | ts '[%Y-%m-%d %H:%M:%S]'"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
