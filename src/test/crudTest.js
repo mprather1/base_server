@@ -1,17 +1,19 @@
 import chai from 'chai'
 import chaiHttp from 'chai-http'
-import server from '../server'
-import {init as db} from '../queries'
+import serverConfig from '../server'
+import bcrypt from 'bcryptjs'
 
 chai.use(chaiHttp)
 
+const server = serverConfig.server
+const db = serverConfig.options.db
 const expect = chai.expect
 const request = chai.request(server)
 
 let runTest = true
 
 function crudTest (props) {
-  const { model, url, postAttributes, putAttributes, extProperties } = props
+  const { model, url, postUrl, postAttributes, putAttributes, extProperties, expectedResponse } = props
   const properties = Object.keys(postAttributes)
 
   before(function (done) {
@@ -27,7 +29,7 @@ function crudTest (props) {
     if (!runTest) {
       throw new Error('Tests did not run...')
     }
-    createModel(model, url, postAttributes, done)
+    createModel(model, postUrl, postAttributes, done)
   })
 
   afterEach(function (done) {
@@ -38,11 +40,11 @@ function crudTest (props) {
     }
   })
 
-  postTest(model, url, postAttributes)
-  getAllTest(model, url, properties, postAttributes, extProperties)
-  putTest(model, url, putAttributes)
-  getSingleTest(model, url, properties, postAttributes, extProperties)
-  deleteTest(model, url)
+  postTest(model, postUrl, postAttributes)
+  getAllTest(model, url, properties, postAttributes, extProperties, expectedResponse)
+  putTest(model, url, postUrl, putAttributes, expectedResponse)
+  getSingleTest(model, url, postUrl, properties, postAttributes, extProperties, expectedResponse)
+  deleteTest(model, url, postUrl, expectedResponse)
 }
 
 function clearModels (model, done) {
@@ -74,6 +76,8 @@ function createModel (model, url, object, done) {
   })
 }
 
+/*eslint-disable */
+
 function postTest (model, url, object) {
   const name = model.slice(0, model.length - 1)
   it('should create a ' + name + ' at ' + url + ' POST', function (done) {
@@ -81,7 +85,7 @@ function postTest (model, url, object) {
     .post(url)
     .send(object)
     .end(function (err, res) {
-      expect(err).to.be.null
+      expect(err).to.be.null 
       expect(res).to.have.status(200)
       expect(res).to.be.json
       expect(res.body).to.have.status('success')
@@ -90,24 +94,35 @@ function postTest (model, url, object) {
   })
 }
 
-function getAllTest (model, url, properties, object, extProperties) {
+function getAllTest (model, url, properties, object, extProperties, expectedResponse) {
   it('should get all ' + model + ' at ' + url + ' GET', function (done) {
     request
     .get(url)
     .end(function (err, res) {
+      let resp
+      if (expectedResponse) {
+        resp = res.body[expectedResponse]
+      } else {
+        resp = res.body
+      }
       expect(err).to.be.null
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body[0]).to.have.property('id')
+      expect(resp[0]).to.have.property('id')
 
       for (var i = 0; i < properties.length; i++) {
-        expect(res.body[0]).to.have.property(properties[i])
-        expect(res.body[0][properties[i]]).to.equal(object[properties[i]])
+        expect(resp[0]).to.have.property(properties[i])        
+        
+        if (properties[i] === 'password') {
+          expect(bcrypt.compareSync(object[properties[i]], resp[0][properties[i]])).to.equal(true)
+        } else {
+          expect(resp[0][properties[i]]).to.equal(object[properties[i]])
+        }
       }
 
       if (extProperties) {
         for (var t = 0; t < extProperties.length; t++) {
-          expect(res.body[0]).to.have.property(extProperties[t])
+          expect(resp[0]).to.have.property(extProperties[t])
         }
       }
 
@@ -116,15 +131,21 @@ function getAllTest (model, url, properties, object, extProperties) {
   })
 }
 
-function putTest (model, url, object) {
+function putTest (model, url, postUrl, object, expectedResponse) {
   const name = model.slice(0, model.length - 1)
-  it('should update a single ' + name + ' at ' + url + ' PUT', function (done) {
+  it('should update a single ' + name + ' at ' + postUrl + ' PUT', function (done) {
     request
     .get(url)
     .end(function (error, response) {
+      let resp
+      if (expectedResponse) {
+        resp = response.body[expectedResponse]
+      } else {
+        resp = response.body
+      }        
       expect(error).to.be.null
       request
-      .put(url + response.body[0].id)
+      .put(postUrl + resp[0].id)
       .send(object)
       .end(function (err, res) {
         expect(err).to.be.null
@@ -137,15 +158,21 @@ function putTest (model, url, object) {
   })
 }
 
-function getSingleTest (model, url, properties, object, extProperties) {
+function getSingleTest (model, url, postUrl, properties, object, extProperties, expectedResponse) {
   const name = model.slice(0, model.length - 1)
   it('should get a single ' + name + ' at ' + url + ' GET', function (done) {
     request
     .get(url)
     .end(function (error, response) {
+      let resp
+      if (expectedResponse) {
+        resp = response.body[expectedResponse]
+      } else {
+        resp = response.body
+      }        
       expect(error).to.be.null
       request
-      .get(url + response.body[0].id)
+      .get(postUrl + resp[0].id)
       .end(function (err, res) {
         expect(err).to.be.null
         expect(res).to.have.status(200)
@@ -154,7 +181,11 @@ function getSingleTest (model, url, properties, object, extProperties) {
 
         for (var i = 0; i < properties.length; i++) {
           expect(res.body).to.have.property(properties[i])
-          expect(res.body[properties[i]]).to.equal(object[properties[i]])
+          if (properties[i] === 'password') {
+            expect(bcrypt.compareSync(object[properties[i]], res.body[properties[i]])).to.equal(true)
+          } else {
+            expect(res.body[properties[i]]).to.equal(object[properties[i]])
+          }
         }
 
         if (extProperties) {
@@ -169,15 +200,21 @@ function getSingleTest (model, url, properties, object, extProperties) {
   })
 }
 
-function deleteTest (model, url) {
+function deleteTest (model, url, postUrl, expectedResponse) {
   const name = model.slice(0, model.length - 1)
   it('should remove a single ' + name + ' at ' + url + ' DELETE', function (done) {
     request
     .get(url)
     .end(function (error, response) {
+      let resp
+      if (expectedResponse) {
+        resp = response.body[expectedResponse]
+      } else {
+        resp = response.body
+      }        
       expect(error).to.be.null
       request
-      .delete(url + response.body[0].id)
+      .delete(postUrl + resp[0].id)
       .end(function (err, res) {
         expect(err).to.be.null
         expect(res).to.have.status(200)

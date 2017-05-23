@@ -7,7 +7,7 @@ CREATE TABLE models (
   ID SERIAL PRIMARY KEY,
   name VARCHAR,
   attribute INTEGER,
-  current_day TIMESTAMP without time zone default (now() at time zone 'utc')
+  created_at TIMESTAMP without time zone default (now() at time zone 'utc')
 );
 
 
@@ -23,17 +23,5 @@ CREATE TABLE models (
   ID SERIAL PRIMARY KEY,
   name VARCHAR,
   attribute INTEGER,
-  current_day TIMESTAMP without time zone default (now() at time zone 'utc')
-);
-
-DROP DATABASE IF EXISTS api_production;
-CREATE DATABASE api_production;
-
-\c api_production;
-
-CREATE TABLE models (
-  ID SERIAL PRIMARY KEY,
-  name VARCHAR,
-  attribute INTEGER,
-  current_day TIMESTAMP without time zone default (now() at time zone 'utc')
+  created_at TIMESTAMP without time zone default (now() at time zone 'utc')
 );

@@ -3,7 +3,8 @@ import {crudTest} from './'
 describe('Models', function () {
   crudTest({
     model: 'models',
-    url: '/api/models/',
+    url: '/api/models?page=1',
+    postUrl: '/api/models/',
     postAttributes: {
       name: 'name',
       attribute: 1
@@ -12,6 +13,7 @@ describe('Models', function () {
       name: 'updatedName',
       attribute: 2
     },
-    extProperties: ['current_day']
+    expectedResponse: 'models',
+    extProperties: ['created_at']
   })
 })
